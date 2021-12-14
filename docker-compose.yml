@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+
+  mountebank-shelly:
+      image: bbyars/mountebank:2.5.0   
+      ports:
+        - "8095:8095"        
+        - "2525:2525"
