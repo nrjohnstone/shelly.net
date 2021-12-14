@@ -116,7 +116,8 @@ Task("Pack-Release")
     {
         throw new Exception("Environment variable LOCAL_NUGET_PACKAGES must be defined");
     }
-
+    
+    CleanDirectories(outputDirectory);
     var settings = new DotNetCorePackSettings
     {
         ArgumentCustomization = args=>args.Append($"-p:Version={version}"),
@@ -125,7 +126,7 @@ Task("Pack-Release")
         OutputDirectory = outputDirectory
     };
 
-    DotNetCorePack(_solutionFile, settings);
+    DotNetCorePack(_mainProjDir, settings);
 });
 
 Task("Nuget-Push")
