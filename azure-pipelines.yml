@@ -55,10 +55,12 @@ jobs:
       filePath: 'build.sh'
       arguments: '--target Pack-Release --configuration Release'
 
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Artifact
-    condition: startsWith(variables['build.sourceBranch'], 'refs/tags/v')
-    inputs:
-      PathtoPublish: './artifacts/*.nupkg'
-      ArtifactName: 'Shelly.Net'
-      publishLocation: 'Container'
+  - publish: $(System.DefaultWorkingDirectory)/artifacts
+    artifact: Shelly.Net
+#  - task: PublishBuildArtifacts@1
+#    displayName: Publish Artifact
+#    condition: startsWith(variables['build.sourceBranch'], 'refs/tags/v')
+#    inputs:
+#      PathtoPublish: './artifacts/*.nupkg'
+#      ArtifactName: 'Shelly.Net'
+#      publishLocation: 'Container'
