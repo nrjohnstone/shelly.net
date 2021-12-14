@@ -50,11 +50,17 @@ jobs:
       arguments: '--target Default --configuration Release'
 
   - task: Bash@3
-    displayName: 'Build Package'
+    displayName: 'Build Nuget Package'
     inputs:
       filePath: 'build.sh'
       arguments: '--target Pack-Release --configuration Release'
 
+  - task: Bash@3
+    displayName: 'Publish Nuget Package'
+    inputs:
+      filePath: 'build.sh'
+      arguments: '--target Nuget-Push --configuration Release'
+      
   - publish: $(System.DefaultWorkingDirectory)/artifacts
     artifact: Shelly.Net
 #  - task: PublishBuildArtifacts@1
