@@ -1,5 +1,3 @@
-#addin "Cake.Incubator&version=3.1.0"
-
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
@@ -21,7 +19,7 @@ var _solutionDir = Directory(".");
 var _solutionFile = _solutionDir + File($"Shelly.Net.sln");
 var _mainProjDir = _solutionDir + Directory("src") + Directory ("Shelly.Net");
 var _artifactDir = _solutionDir + Directory("artifacts");
-var _version = EnvironmentVariable("build_number");
+var _version = EnvironmentVariable<string>("build_number", "");
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -139,7 +137,7 @@ Task("Pack-Local")
     string buildNumber = DateTime.Now.ToString("yyyyMMddHHmmss");
     string version = $"2.0.0-build-{buildNumber}";
 
-    string outputDirectory = EnvironmentVariable<string>("LOCAL_NUGET_PACKAGES");
+    string outputDirectory = EnvironmentVariable<string>("LOCAL_NUGET_PACKAGES", "");
 
     if (string.IsNullOrEmpty(outputDirectory))
     {
