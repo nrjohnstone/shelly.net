@@ -1,0 +1,64 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  tags:
+    include:
+      - 'v*'
+
+jobs:
+- job: buildMaster
+  displayName: Build Master
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+
+  - task: NuGetToolInstaller@0
+    displayName: 'Install NuGet Tools'
+
+  - task: Bash@3
+    displayName: Set the tag name as an environment variable
+    condition: startsWith(variables['build.sourceBranch'], 'refs/tags/v')
+    inputs:
+     targetType: inline
+     script: |
+       VERSION_TAG=`git describe --tags` && echo "##vso[task.setvariable variable=VERSION_TAG]$VERSION_TAG"
+      
+  - task: Assembly-Info-NetFramework@3
+    displayName: Patch Assembly Version
+    condition: startsWith(variables['build.sourceBranch'], 'refs/tags/v')
+    inputs:
+      Path: '$(Build.SourcesDirectory)'
+      FileNames: |        
+        **/AssemblyInfo.cs        
+      InsertAttributes: false
+      FileEncoding: 'auto'
+      WriteBOM: false
+      VersionNumber: '$(VERSION_TAG)'
+      FileVersionNumber: '$(VERSION_TAG)'      
+      LogLevel: 'verbose'
+      FailOnWarning: true
+      DisableTelemetry: true
+
+  - task: Bash@3
+    displayName: 'Build Solution'
+    inputs:
+      filePath: 'build.sh'
+      arguments: '--target Default --configuration Release'
+
+  - task: Bash@3
+    displayName: 'Build Package'
+    inputs:
+      filePath: 'build.sh'
+      arguments: '--target Pack-Release --configuration Release'
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Artifact
+    condition: startsWith(variables['build.sourceBranch'], 'refs/tags/v')
+    inputs:
+      PathtoPublish: './artifacts/*.nupkg'
+      ArtifactName: 'Shelly.Net'
+      publishLocation: 'Container'

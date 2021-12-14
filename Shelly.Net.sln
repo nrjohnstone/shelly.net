@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{FC70EDEB
 	ProjectSection(SolutionItems) = preProject
 		build.cake = build.cake
 		docker-compose.yml = docker-compose.yml
+		build.sh = build.sh
 	EndProjectSection
 EndProject
 Global
