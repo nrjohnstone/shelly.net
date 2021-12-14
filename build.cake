@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions
+
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
@@ -91,12 +93,23 @@ Task("Run-Integration-Tests")
 Task("Pack-Release")
     .Does(() => 
 {       
-    string version = EnvironmentVariable("PACKAGE_VERSION");
+    string version = EnvironmentVariable<string>("VERSION_TAG", "");
     if (string.IsNullOrEmpty(version))
     {
-        throw new Exception("Environment variable PACKAGE_VERSION must be defined");
+        throw new Exception("Environment variable VERSION_TAG must be defined");
     }
+    Information($"VERSION_TAG={version}");
+    Match match = Regex.Match(version, @"v(\d*.\d*.\d*)", RegexOptions.IgnoreCase);
 
+    if (match.Success)
+    {        
+        version = match.Groups[1].ToString();
+    }
+    else
+    {
+        throw new InvalidOperationException("VERSION_TAG does not match expected regular expression for Major.Minor.Patch");
+    }
+    Information($"Nuget Package Version={version}");
     string outputDirectory = Directory("artifacts");
 
     if (string.IsNullOrEmpty(outputDirectory))

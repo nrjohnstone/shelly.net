@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{FC70EDEB
 		docker-compose.yml = docker-compose.yml
 		build.sh = build.sh
 		build.ps1 = build.ps1
+		azure-pipelines.yml = azure-pipelines.yml
 	EndProjectSection
 EndProject
 Global
