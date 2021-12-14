@@ -150,10 +150,11 @@ Task("Nuget-Push")
     packages = GetFiles($"./{outputDirectory}/*.*[0-9].*[0-9].*[0-9].symbols.nupkg");
     foreach (var package in packages)
     {
-        NuGetPush(package, new NuGetPushSettings {
-            Source = "https://nuget.smbsrc.net",        
-            ApiKey = nugetApiKey        
-        });
+    // Disable symbol pushing until I can figure out why response is 500
+//         NuGetPush(package, new NuGetPushSettings {
+//             Source = "https://nuget.smbsrc.net",        
+//             ApiKey = nugetApiKey        
+//         });
     }    
 });
 
