@@ -7,7 +7,12 @@ trigger:
   tags:
     include:
       - 'v*'
-
+      - 
+variables:
+  - group: "Nuget Publish"
+  - name: nugetApiKey
+    value: $[variables.NUGET_API_KEY]
+    
 jobs:
 - job: buildMaster
   displayName: Build Master
@@ -60,13 +65,8 @@ jobs:
     inputs:
       filePath: 'build.sh'
       arguments: '--target Nuget-Push --configuration Release'
+    env:
+      NUGET_API_KEY: $(nugetApiKey)
       
   - publish: $(System.DefaultWorkingDirectory)/artifacts
     artifact: Shelly.Net
-#  - task: PublishBuildArtifacts@1
-#    displayName: Publish Artifact
-#    condition: startsWith(variables['build.sourceBranch'], 'refs/tags/v')
-#    inputs:
-#      PathtoPublish: './artifacts/*.nupkg'
-#      ArtifactName: 'Shelly.Net'
-#      publishLocation: 'Container'
