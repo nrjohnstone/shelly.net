@@ -132,16 +132,29 @@ Task("Pack-Release")
 Task("Nuget-Push")
     .Does(() => 
 {
+    var nugetApiKey = EnvironmentVariable("NUGET_API_KEY");
     string outputDirectory = Directory("artifacts");
     
-    var package = outputDirectory + File("/Shelly.Net.*.nupkg");
-    var nugetApiKey = EnvironmentVariable("NUGET_API_KEY");
+    // Publish nuget packages before symbols
+    var packages = GetFiles($"./{outputDirectory}/*.*[0-9].*[0-9].*[0-9].nupkg");
     
-    // Push the package.
-    NuGetPush(package, new NuGetPushSettings {
-        Source = "https://api.nuget.org/v3/index.json",
-        ApiKey = nugetApiKey
-    });
+    foreach (var package in packages)
+    {
+        NuGetPush(package, new NuGetPushSettings {
+            Source = "https://api.nuget.org/v3/index.json",        
+            ApiKey = nugetApiKey        
+        });
+    }
+    
+    // Only publish nuget symbols
+    packages = GetFiles($"./{outputDirectory}/*.*[0-9].*[0-9].*[0-9].symbols.nupkg");
+    foreach (var package in packages)
+    {
+        NuGetPush(package, new NuGetPushSettings {
+            Source = "https://api.nuget.org/v3/index.json",        
+            ApiKey = nugetApiKey        
+        });
+    }    
 });
 
 Task("Pack-Local")
