@@ -151,7 +151,7 @@ Task("Nuget-Push")
     foreach (var package in packages)
     {
         NuGetPush(package, new NuGetPushSettings {
-            Source = "https://api.nuget.org/v3/index.json",        
+            Source = "https://nuget.smbsrc.net",        
             ApiKey = nugetApiKey        
         });
     }    
