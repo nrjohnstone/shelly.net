@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AssemblyName>NrjSolutions.Shelly.Net</AssemblyName>
     <RootNamespace>NrjSolutions.Shelly.Net</RootNamespace>
     <Company>NrjSolutions</Company>
     <Authors>Nathan Johnstone</Authors>
