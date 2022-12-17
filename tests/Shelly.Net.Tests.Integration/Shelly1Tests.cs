@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -9,6 +10,7 @@ using NUnit.Framework;
 
 namespace Shelly.Net.Tests.Integration
 {
+    [TestFixture]
     public class Shelly1Tests
     {
         private HttpImposter _imposter;
@@ -17,11 +19,11 @@ namespace Shelly.Net.Tests.Integration
         public void SetUp()
         {
             Global.MountebankClient.DeleteImposter(8095);
-            _imposter = Global.MountebankClient.CreateHttpImposter(8095);
+            _imposter = Global.MountebankClient.CreateHttpImposter(8095, recordRequests: true);
         }
         
         [Test]
-        public async Task Shelly1_WhenResponseIsInternalServerError_ShouldReturnFailure()
+        public async Task WhenResponseIsInternalServerError_ShouldReturnFailure()
         {
             _imposter.AddStub().OnPathEquals("/status").ReturnsStatus(HttpStatusCode.InternalServerError);
             
@@ -29,7 +31,9 @@ namespace Shelly.Net.Tests.Integration
             
             Settings settings = Settings.IntegrationTest();
 
-            var sut = new Shelly1Client(settings.User,settings.Password, new Uri(settings.ShellyUri));
+            HttpClient httpClient = new HttpClient();
+            
+            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
 
             // act
             var shellyResult = await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);
@@ -41,15 +45,41 @@ namespace Shelly.Net.Tests.Integration
         }
         
         [Test]
-        public async Task Shelly1_WhenResponseServiceUnavailable_ShouldReturnTransientFailure()
+        public async Task ShellyRequest_ShouldIncludeBasicAuthHeader()
+        {
+            var obj = ShellyTestData.CreateShelly1StatusJsonResponse();
+            _imposter.AddStub().OnPathEquals("/status").ReturnsJson(HttpStatusCode.OK, obj);
+            
+            Global.MountebankClient.Submit(_imposter);
+            
+            Settings settings = Settings.IntegrationTest();
+
+            HttpClient httpClient = new HttpClient();
+            
+            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
+
+            // act
+            await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);
+            
+            // assert
+            var remoteHttpImposter = Global.MountebankClient.GetHttpImposter(8095);
+            remoteHttpImposter.Requests.Length.Should().Be(1);
+            remoteHttpImposter.Requests[0].Headers.Should().ContainKey("Authorization");
+            remoteHttpImposter.Requests[0].Headers["Authorization"].Should()
+                .Be("Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ=");
+        }
+        
+        [Test]
+        public async Task WhenResponseServiceUnavailable_ShouldReturnTransientFailure()
         {
             _imposter.AddStub().OnPathEquals("/status").ReturnsStatus(HttpStatusCode.ServiceUnavailable);
             
             Global.MountebankClient.Submit(_imposter);
             
             Settings settings = Settings.IntegrationTest();
-
-            var sut = new Shelly1Client(settings.User,settings.Password, new Uri(settings.ShellyUri));
+            HttpClient httpClient = new HttpClient();
+            
+            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
 
             // act
             var shellyResult = await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);
@@ -61,15 +91,16 @@ namespace Shelly.Net.Tests.Integration
         }
         
         [Test]
-        public async Task Shelly1_WhenResponseNotFound_ShouldReturnSuccess()
+        public async Task WhenResponseNotFound_ShouldReturnSuccess()
         {
             _imposter.AddStub().OnPathEquals("/status").ReturnsStatus(HttpStatusCode.NotFound);
             
             Global.MountebankClient.Submit(_imposter);
             
             Settings settings = Settings.IntegrationTest();
-
-            var sut = new Shelly1Client(settings.User,settings.Password, new Uri(settings.ShellyUri));
+            HttpClient httpClient = new HttpClient();
+            
+            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
 
             // act
             var shellyResult = await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);
@@ -82,51 +113,18 @@ namespace Shelly.Net.Tests.Integration
         }
         
         [Test]
-        public async Task Shelly1_CanRetrieveValidStatus()
+        public async Task CanRetrieveValidStatus()
         {
-            var obj = new
-            {
-                wifi_sta = new {
-                    connected = true,
-                    ssid = "abc-home",
-                    ip = "10.1.5.10",
-                    rssi = -77
-                },
-                cloud = new
-                {
-                    connected = true,
-                    enabled = true
-                },
-                mqtt = new
-                {
-                    connected = true
-                },
-                update = new
-                {
-                    status = "pending",
-                    has_update = true,
-                    new_version = "20200320-123430/v1.6.2@514044b4",
-                    old_version = "20200220-123430/v1.6.1@334044b4"
-                },
-                time = "21:27",
-                unixtime = 1639430855,
-                serial = 1234,
-                uptime = 600,
-                ram_total = 35000,
-                ram_free = 6000,
-                fs_size = 60000,
-                fs_free = 5000,
-                has_update = true,
-                mac = "DC4F2276E575"
-            };
+            var obj = ShellyTestData.CreateShelly1StatusJsonResponse();
             
             _imposter.AddStub().OnPathEquals("/status").ReturnsJson(HttpStatusCode.OK, obj);
             
             Global.MountebankClient.Submit(_imposter);
             
             Settings settings = Settings.IntegrationTest();
-
-            var sut = new Shelly1Client(settings.User,settings.Password, new Uri(settings.ShellyUri));
+            HttpClient httpClient = new HttpClient();
+            
+            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
 
             // act
             var shellyResult = await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);

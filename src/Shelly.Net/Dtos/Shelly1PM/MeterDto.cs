@@ -7,6 +7,9 @@ namespace NrjSolutions.Shelly.Net.Dtos.Shelly1PM
         [JsonProperty("power")]
         public double Power { get; set; }
 
+        [JsonProperty("overpower")]
+        public double OverPower { get; set; }
+        
         [JsonProperty("total")]
         public long Total { get; set; }
 
@@ -15,5 +18,8 @@ namespace NrjSolutions.Shelly.Net.Dtos.Shelly1PM
 
         [JsonProperty("timestamp")]
         public long TimeStamp { get; set; }
+        
+        [JsonProperty("counters")]
+        public long[] Counters { get; set; }
     }
 }

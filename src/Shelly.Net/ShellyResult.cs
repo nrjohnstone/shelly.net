@@ -61,9 +61,14 @@ namespace NrjSolutions.Shelly.Net
             return new ShellyResult<T>(value, true, false,message);
         }
 
-        public static ShellyResult<T> Failure(bool isTransient, string message = null)
+        public static ShellyResult<T> Failure(string message = null)
         {
-            return new ShellyResult<T>(default, false, isTransient, message);
+            return new ShellyResult<T>(default, success: false, isTransient: false, message);
+        }
+
+        public static ShellyResult<T> TransientFailure(string message = null)
+        {
+            return new ShellyResult<T>(default, success: false, isTransient: true, message);
         }
     }
 }

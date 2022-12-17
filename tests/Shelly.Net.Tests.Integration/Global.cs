@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using FluentAssertions;
 using MbDotNet;
 using NUnit.Framework;
@@ -14,7 +13,8 @@ namespace Shelly.Net.Tests.Integration
     [SetUpFixture]
     internal class Global
     {
-        public static MountebankClient MountebankClient { get; private set; }        
+        public static MountebankClient MountebankClient { get; private set; }     
+        
         [OneTimeSetUp]
         public void OneTimeSetup()
         {

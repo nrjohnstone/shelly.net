@@ -1,74 +1,84 @@
 ﻿using System;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using NrjSolutions.Shelly.Net.Dtos;
-using RestSharp;
-using RestSharp.Authenticators;
+using Newtonsoft.Json;
 
 namespace NrjSolutions.Shelly.Net
 {
-    public abstract class ShellyClientBase<T>
+    public abstract class ShellyClientBase
     {
         private readonly string _userName;
         private readonly string _password;
-        private readonly Uri _server;
+        protected readonly HttpClient ShellyHttpClient;
+        protected readonly Uri ServerUri;
         
-        protected int DefaultTimeoutMs = 5000;
+        protected TimeSpan DefaultTimeout = TimeSpan.FromSeconds(5);
         
-        public ShellyClientBase(string userName, string password, Uri server, TimeSpan? defaultTimeout = null)
+        public ShellyClientBase(string userName, string password, HttpClient httpClient, Uri serverUri, TimeSpan? defaultTimeout = null)
         {
             if (userName == null) throw new ArgumentNullException(nameof(userName));
             if (password == null) throw new ArgumentNullException(nameof(password));
-            if (server == null) throw new ArgumentNullException(nameof(server));
+            if (serverUri == null) throw new ArgumentNullException(nameof(serverUri));
 
             _userName = userName;
             _password = password;
-            _server = server;
-
+            ShellyHttpClient = httpClient;
+            ServerUri = serverUri;
+            
             if (defaultTimeout.HasValue)
             {
-                DefaultTimeoutMs = Convert.ToInt32(defaultTimeout.Value.TotalMilliseconds);
-            }
-            else
-            {
-                DefaultTimeoutMs = 5000;
+                DefaultTimeout = defaultTimeout.Value;
             }
         }
 
-        protected async Task<ShellyResult<T>> ExecuteAsync(IRestRequest restRequest, Method method, CancellationToken cancellationToken)
+        protected async Task<ShellyResult<T>> ExecuteRequestAsync<T>(HttpRequestMessage httpRequestMessage,
+            CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            var client = GetRestClient();
-            var response = await client.ExecuteAsync(restRequest, method, cancellationToken);
-
-            if (response.StatusCode == 0)
-            {
-                // RestSharp will return with a status code of 0 if timeout is reached
-                return ShellyResult<T>.Failure(true, "Device did not respond within timeout period");
-            }
-            if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
-            {
-                return ShellyResult<T>.Failure(true, "Device responded with ServiceUnavailable");
-            }
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return ShellyResult<T>.Success(default, "Device responded with NotFound");
-            }
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                return ShellyResult<T>.Failure(false, $"Device responded with http status code {response.StatusCode}");
-            }
+            timeout = timeout ?? DefaultTimeout;
             
-            return HandleOkResponse(response);
+            using (var timeoutTokenSource = new CancellationTokenSource(timeout.Value))
+            {
+                var authenticationString = $"{_userName}:{_password}";
+                var base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes(authenticationString));
+                
+                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
+                
+                var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token , cancellationToken);
+                var response = await ShellyHttpClient.SendAsync(httpRequestMessage, linkedTokenSource.Token);
+                
+                if (response.StatusCode == 0)
+                {
+                    // Status code of 0 means timeout reached
+                    return ShellyResult<T>.TransientFailure("Device did not respond within timeout period");
+                }
+
+                if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                {
+                    return ShellyResult<T>.TransientFailure("Device responded with ServiceUnavailable");
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return ShellyResult<T>.Success(default, "Device responded with NotFound");
+                }
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    return ShellyResult<T>.Failure($"Device responded with http status code {response.StatusCode}");
+                }
+
+                return await HandleOkResponse<T>(response);
+            }
         }
 
-        protected abstract ShellyResult<T> HandleOkResponse(IRestResponse response);
-        
-        protected virtual IRestClient GetRestClient()
+        protected virtual async Task<ShellyResult<T>> HandleOkResponse<T>(HttpResponseMessage response)
         {
-            IRestClient client = new RestClient(_server);
-            client.Authenticator = new HttpBasicAuthenticator(_userName, _password);
-            return client;
+            var readAsStringAsync = await response.Content.ReadAsStringAsync();
+            var shelly1Status = JsonConvert.DeserializeObject<T>(readAsStringAsync);
+            return ShellyResult<T>.Success(shelly1Status);
         }
     }
 }
