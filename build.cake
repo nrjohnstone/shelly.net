@@ -48,12 +48,12 @@ Task("Build")
     .IsDependentOn("Restore-NuGet-Packages")
     .Does(() =>
 {
-    var settings = new DotNetCoreBuildSettings
+    var settings = new DotNetBuildSettings
 	{
 		Configuration = _configuration,
 	};
 
-    DotNetCoreBuild(_solutionFile, settings);
+    DotNetBuild(_solutionFile, settings);
 });
 
 Task("Rebuild")
@@ -64,14 +64,14 @@ Task("Run-Unit-Tests")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    var settings = new DotNetCoreTestSettings
+    var settings = new DotNetTestSettings
     {
         Configuration = _configuration
     };
     var unitTestProjects = GetFiles("./tests/**/*Tests.Unit.csproj");
     foreach(var file in unitTestProjects)
     {
-        DotNetCoreTest(file.FullPath, settings);
+        DotNetTest(file.FullPath, settings);
     }
 });
 
@@ -79,14 +79,14 @@ Task("Run-Integration-Tests")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    var settings = new DotNetCoreTestSettings
+    var settings = new DotNetTestSettings
     {
         Configuration = _configuration
     };
     var unitTestProjects = GetFiles("./tests/**/*Tests.Integration.csproj");
     foreach(var file in unitTestProjects)
     {
-        DotNetCoreTest(file.FullPath, settings);
+        DotNetTest(file.FullPath, settings);
     }
 });
 
@@ -118,7 +118,7 @@ Task("Pack-Release")
     }
     
     CleanDirectories(outputDirectory);
-    var settings = new DotNetCorePackSettings
+    var settings = new DotNetPackSettings
     {
         ArgumentCustomization = args=>args.Append($"-p:Version={version}"),
         Configuration = _configuration,
@@ -126,7 +126,7 @@ Task("Pack-Release")
         OutputDirectory = outputDirectory
     };
 
-    DotNetCorePack(_mainProjDir, settings);
+    DotNetPack(_mainProjDir, settings);
 });
 
 Task("Nuget-Push")
@@ -172,7 +172,7 @@ Task("Pack-Local")
         throw new Exception("Environment variable LOCAL_NUGET_PACKAGES must be defined");
     }
 
-    var settings = new DotNetCorePackSettings
+    var settings = new DotNetPackSettings
     {
         ArgumentCustomization = args=>args.Append($"-p:Version={version}"),
         Configuration = _configuration,
@@ -180,7 +180,7 @@ Task("Pack-Local")
         OutputDirectory = outputDirectory
     };
 
-    DotNetCorePack(_solutionFile, settings);
+    DotNetPack(_solutionFile, settings);
 });
 
 //////////////////////////////////////////////////////////////////////
