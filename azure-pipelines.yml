@@ -1,17 +1,19 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# Trigger a build on version tags and push to nuget repository
 
 trigger:
   tags:
     include:
-      - 'v*'
-      - 
+      - 'v*'      
 variables:
   - group: "Nuget Publish"
   - name: nugetApiKey
     value: $[variables.NUGET_API_KEY]
+
+pr:
+  branches:
+    exclude:
+      - '*'
+
     
 jobs:
 - job: buildMaster
@@ -21,11 +23,8 @@ jobs:
 
   steps:
 
-  - task: NuGetToolInstaller@0
-    displayName: 'Install NuGet Tools'
-
   - task: Bash@3
-    displayName: Set the tag name as an environment variable
+    displayName: Set VERSION_TAG environment variable
     condition: startsWith(variables['build.sourceBranch'], 'refs/tags/v')
     inputs:
      targetType: inline
@@ -52,7 +51,7 @@ jobs:
     displayName: 'Build Solution'
     inputs:
       filePath: 'build.sh'
-      arguments: '--target Default --configuration Release'
+      arguments: '--target Build --configuration Release'
 
   - task: Bash@3
     displayName: 'Build Nuget Package'
