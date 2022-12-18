@@ -1,0 +1,34 @@
+# Trigger a build for every commit
+
+trigger:  
+  branches:
+    include:
+    - '*'
+
+pr:
+  branches:
+    exclude:
+      - '*'    
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+ 
+  - task: Bash@3
+    displayName: 'Build Solution'
+    inputs:
+      filePath: 'build.sh'
+      arguments: '--target Build --configuration Release'
+
+  - task: Bash@3
+    displayName: 'Run Unit Tests'
+    inputs:
+      filePath: 'build.sh'
+      arguments: '--target Run-Unit-Tests --configuration Release'
+     
