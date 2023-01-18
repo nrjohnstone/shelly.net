@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using MbDotNet.Models.Imposters;
 using NrjSolutions.Shelly.Net;
+using NrjSolutions.Shelly.Net.Clients;
+using NrjSolutions.Shelly.Net.Options;
 using NUnit.Framework;
 
 namespace Shelly.Net.Tests.Integration
@@ -27,7 +29,14 @@ namespace Shelly.Net.Tests.Integration
 
             HttpClient httpClient = new HttpClient();
 
-            var sut = new Shelly1PmClient(settings.User, settings.Password, httpClient, new Uri(settings.ShellyUri));
+            Shelly1PmOptions options = new Shelly1PmOptions()
+            {
+                UserName = settings.User,
+                Password = settings.Password,
+                ServerUri = new Uri(settings.ShellyUri)
+            };
+            
+            var sut = new Shelly1PmClient(httpClient, options);
             return sut;
         }
         

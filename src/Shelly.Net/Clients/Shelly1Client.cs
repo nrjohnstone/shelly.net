@@ -4,12 +4,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Flurl;
 using NrjSolutions.Shelly.Net.Dtos;
+using NrjSolutions.Shelly.Net.Options;
 
-namespace NrjSolutions.Shelly.Net
+namespace NrjSolutions.Shelly.Net.Clients
 {
     public class Shelly1Client : ShellyClientBase, IShelly1
     {
-        public Shelly1Client(string userName, string password, HttpClient httpClient, Uri serverUri) : base(userName, password, httpClient, serverUri)
+        public Shelly1Client(HttpClient httpClient, Shelly1Options shelly1Options) : base(httpClient, shelly1Options)
         {
         }
 

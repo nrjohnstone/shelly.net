@@ -5,32 +5,31 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using NrjSolutions.Shelly.Net.Options;
 
-namespace NrjSolutions.Shelly.Net
+namespace NrjSolutions.Shelly.Net.Clients
 {
     public abstract class ShellyClientBase
     {
-        private readonly string _userName;
-        private readonly string _password;
         protected readonly HttpClient ShellyHttpClient;
+        private readonly IShellyCommonOptions _shellyCommonOptions;
         protected readonly Uri ServerUri;
         
         protected TimeSpan DefaultTimeout = TimeSpan.FromSeconds(5);
         
-        public ShellyClientBase(string userName, string password, HttpClient httpClient, Uri serverUri, TimeSpan? defaultTimeout = null)
+        public ShellyClientBase(HttpClient httpClient, IShellyCommonOptions shellyCommonOptions)
         {
-            if (userName == null) throw new ArgumentNullException(nameof(userName));
-            if (password == null) throw new ArgumentNullException(nameof(password));
-            if (serverUri == null) throw new ArgumentNullException(nameof(serverUri));
-
-            _userName = userName;
-            _password = password;
-            ShellyHttpClient = httpClient;
-            ServerUri = serverUri;
+            if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
+            if (shellyCommonOptions == null) throw new ArgumentNullException(nameof(shellyCommonOptions));
             
-            if (defaultTimeout.HasValue)
+
+            ShellyHttpClient = httpClient;
+            _shellyCommonOptions = shellyCommonOptions;
+            ServerUri = shellyCommonOptions.ServerUri;
+            
+            if (shellyCommonOptions.DefaultTimeout.HasValue)
             {
-                DefaultTimeout = defaultTimeout.Value;
+                DefaultTimeout = shellyCommonOptions.DefaultTimeout.Value;
             }
         }
 
@@ -41,7 +40,7 @@ namespace NrjSolutions.Shelly.Net
             
             using (var timeoutTokenSource = new CancellationTokenSource(timeout.Value))
             {
-                var authenticationString = $"{_userName}:{_password}";
+                var authenticationString = $"{_shellyCommonOptions.UserName}:{_shellyCommonOptions.Password}";
                 var base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes(authenticationString));
                 
                 httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);

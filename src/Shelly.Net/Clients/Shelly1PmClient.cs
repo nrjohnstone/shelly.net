@@ -4,14 +4,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Flurl;
 using NrjSolutions.Shelly.Net.Dtos;
+using NrjSolutions.Shelly.Net.Options;
 
-namespace NrjSolutions.Shelly.Net
+namespace NrjSolutions.Shelly.Net.Clients
 {
     public class Shelly1PmClient : ShellyClientBase, IShelly1Pm
     {
-        public Shelly1PmClient(string userName, string password, HttpClient httpClient, Uri serverUri) : base(userName, password, httpClient, serverUri)
+        public Shelly1PmClient(HttpClient httpClient, Shelly1PmOptions shellyOptions) : base(httpClient, shellyOptions)
         {
-       
         }
     
         public async Task<ShellyResult<Shelly1PmStatusDto>> GetStatus(CancellationToken cancellationToken, TimeSpan? timeout = null)

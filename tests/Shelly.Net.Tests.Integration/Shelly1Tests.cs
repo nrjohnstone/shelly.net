@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using MbDotNet.Models.Imposters;
 using NrjSolutions.Shelly.Net;
+using NrjSolutions.Shelly.Net.Clients;
+using NrjSolutions.Shelly.Net.Options;
 using NUnit.Framework;
 
 namespace Shelly.Net.Tests.Integration
@@ -21,6 +23,21 @@ namespace Shelly.Net.Tests.Integration
             Global.MountebankClient.DeleteImposter(8095);
             _imposter = Global.MountebankClient.CreateHttpImposter(8095, recordRequests: true);
         }
+
+        private Shelly1Client CreateSut()
+        {
+            Settings settings = Settings.IntegrationTest();
+
+            HttpClient httpClient = new HttpClient();
+            Shelly1Options options = new ()
+            {
+                UserName = settings.User,
+                Password = settings.Password,
+                ServerUri = new Uri(settings.ShellyUri)
+            };
+            
+            return new Shelly1Client(httpClient, options);
+        }
         
         [Test]
         public async Task WhenResponseIsInternalServerError_ShouldReturnFailure()
@@ -29,11 +46,7 @@ namespace Shelly.Net.Tests.Integration
             
             Global.MountebankClient.Submit(_imposter);
             
-            Settings settings = Settings.IntegrationTest();
-
-            HttpClient httpClient = new HttpClient();
-            
-            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
+            var sut = CreateSut();
 
             // act
             var shellyResult = await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);
@@ -52,11 +65,7 @@ namespace Shelly.Net.Tests.Integration
             
             Global.MountebankClient.Submit(_imposter);
             
-            Settings settings = Settings.IntegrationTest();
-
-            HttpClient httpClient = new HttpClient();
-            
-            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
+            var sut = CreateSut();
 
             // act
             await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);
@@ -76,10 +85,7 @@ namespace Shelly.Net.Tests.Integration
             
             Global.MountebankClient.Submit(_imposter);
             
-            Settings settings = Settings.IntegrationTest();
-            HttpClient httpClient = new HttpClient();
-            
-            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
+            var sut = CreateSut();
 
             // act
             var shellyResult = await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);
@@ -97,10 +103,7 @@ namespace Shelly.Net.Tests.Integration
             
             Global.MountebankClient.Submit(_imposter);
             
-            Settings settings = Settings.IntegrationTest();
-            HttpClient httpClient = new HttpClient();
-            
-            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
+            var sut = CreateSut();
 
             // act
             var shellyResult = await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);
@@ -121,10 +124,7 @@ namespace Shelly.Net.Tests.Integration
             
             Global.MountebankClient.Submit(_imposter);
             
-            Settings settings = Settings.IntegrationTest();
-            HttpClient httpClient = new HttpClient();
-            
-            var sut = new Shelly1Client(settings.User,settings.Password, httpClient, new Uri(settings.ShellyUri));
+            var sut = CreateSut();
 
             // act
             var shellyResult = await sut.GetStatus(timeout: TimeSpan.FromSeconds(1), cancellationToken: CancellationToken.None);

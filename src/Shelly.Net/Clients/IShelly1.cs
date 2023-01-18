@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NrjSolutions.Shelly.Net.Dtos;
 
-namespace NrjSolutions.Shelly.Net
+namespace NrjSolutions.Shelly.Net.Clients
 {
     public interface IShelly1
     {
